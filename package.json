@@ -29,6 +29,7 @@
     "replicate": "^1.4.0",
     "sharp": "^0.34.5",
     "svgo": "^3.3.2",
+    "tesseract.js": "^7.0.0",
     "upscaler": "^1.0.0-beta.19"
   },
   "devDependencies": {

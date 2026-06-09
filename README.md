@@ -6,11 +6,11 @@ Internal A3 Brands toolkit. All-in-one image and document utilities, deployed on
 
 **Image (12)** — Image → WebP, optimizer, resizer, format converter (PNG/JPG/WebP/AVIF), cropper with social presets, background remover (on-device AI), AI upscaler (Real-ESRGAN), EXIF stripper, favicon generator, SVG optimizer, color palette extractor, watermark.
 
-**Document (7)** — PDF merge, split, rotate, PDF → image, image → PDF, PDF text extract, DOCX → PDF.
+**Document (8)** — PDF merge, split, rotate, PDF → image, image → PDF, PDF text extract, DOCX → PDF, PDF → DOCX (on-device layout reconstruction, with optional OCR mode for scanned/image PDFs via Tesseract.js).
 
 **Utility (1)** — QR code generator (PNG / SVG, with full color + ECC controls).
 
-**All tools run in the browser** — files never leave the device, no API keys, no per-file cost. The AI upscaler uses TensorFlow.js + ESRGAN-thick via WebGL (model caches after first load, ~16 MB). The only server route is:
+**All tools run in the browser** — files never leave the device, no API keys, no per-file cost. The AI upscaler uses TensorFlow.js + ESRGAN-thick via WebGL (model caches after first load, ~16 MB). PDF → DOCX in OCR mode uses Tesseract.js on-device (English model, ~13 MB, downloaded from CDN and cached after first use); files still never leave the browser. The only server route is:
 
 - `/api/docx-to-pdf` — mammoth + pdf-lib. No external API.
 

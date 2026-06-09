@@ -128,6 +128,13 @@ export const TOOLS: ToolDef[] = [
     badge: "server",
   },
   {
+    slug: "pdf-to-docx",
+    title: "PDF → DOCX",
+    tagline: "Rebuild an editable Word doc from a text PDF — fully in-browser.",
+    category: "document",
+    badge: "new",
+  },
+  {
     slug: "qr-generator",
     title: "QR Generator",
     tagline: "URL or text → SVG/PNG QR. Optional logo center.",

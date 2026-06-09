@@ -28,6 +28,7 @@ export default function ToolShell({
             {tool.badge === "ml" && <span className="pill">ML model</span>}
             {tool.badge === "server" && <span className="pill">Server route</span>}
             {tool.badge === "beta" && <span className="pill">Beta</span>}
+            {tool.badge === "new" && <span className="pill">New</span>}
           </div>
         </div>
       </div>
