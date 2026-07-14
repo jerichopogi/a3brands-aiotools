@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 import { lookup } from "node:dns/promises";
 import chromium from "@sparticuz/chromium";
-import puppeteer from "puppeteer-core";
+import puppeteer, { type Page } from "puppeteer-core";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const NAV_TIMEOUT_MS = 30_000;
+// Grace period for anti-bot interstitials that auto-clear after a JS check.
+const CHALLENGE_GRACE_MS = 5_000;
 const ALLOWED_FORMATS = new Set(["A4", "Letter"]);
+
+// Markers of an anti-bot interstitial (Cloudflare and similar) rather than real content.
+const CHALLENGE_RE =
+  /just a moment|attention required|checking your browser|verify you are human|enable javascript and cookies|cf-browser-verification|needs to review the security of your connection/i;
 
 interface RenderRequest {
   url?: unknown;
@@ -67,6 +73,19 @@ async function validateUrl(raw: string): Promise<URL> {
   return parsed;
 }
 
+// Detects an anti-bot challenge page by inspecting the rendered title and body text.
+async function looksLikeChallenge(page: Page): Promise<boolean> {
+  try {
+    const title = await page.title();
+    const text = await page.evaluate(
+      () => document.body?.innerText?.slice(0, 3000) ?? "",
+    );
+    return CHALLENGE_RE.test(`${title}\n${text}`);
+  } catch {
+    return false;
+  }
+}
+
 async function launchBrowser() {
   // In local dev, use an installed Chrome; on Vercel, use the bundled chromium binary.
   if (process.env.NODE_ENV === "development") {
@@ -110,7 +129,37 @@ export async function POST(req: Request) {
     browser = await launchBrowser();
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(NAV_TIMEOUT_MS);
-    await page.goto(target.href, { waitUntil: "networkidle2" });
+
+    // Present as a normal desktop Chrome: a real viewport, a de-"Headless" UA, and a
+    // language header. This improves render fidelity and clears naive user-agent blocks.
+    // It does NOT defeat IP-based bot challenges — datacenter IPs are distrusted by design.
+    await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
+    await page.setUserAgent((await browser.userAgent()).replace(/HeadlessChrome/g, "Chrome"));
+    await page.setExtraHTTPHeaders({ "Accept-Language": "en-US,en;q=0.9" });
+
+    try {
+      await page.goto(target.href, { waitUntil: "networkidle2" });
+    } catch (navErr) {
+      const m = navErr instanceof Error ? navErr.message : "";
+      const friendly = /timeout/i.test(m)
+        ? "The page took too long to load (30s). It may be very heavy or unreachable."
+        : "Could not load that page.";
+      return NextResponse.json({ error: friendly }, { status: 502 });
+    }
+
+    // Some interstitials auto-clear after a JS check — wait once, then re-check.
+    if (await looksLikeChallenge(page)) {
+      await new Promise((r) => setTimeout(r, CHALLENGE_GRACE_MS));
+    }
+    if (await looksLikeChallenge(page)) {
+      return NextResponse.json(
+        {
+          error:
+            "This page is protected by an anti-bot challenge (e.g. Cloudflare) and can't be captured from the server. Try a page without bot protection.",
+        },
+        { status: 422 },
+      );
+    }
 
     const pdf = await page.pdf({
       format: format as "A4" | "Letter",
