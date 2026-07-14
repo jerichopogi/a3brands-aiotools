@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@imgly/background-removal": "^1.5.8",
+    "@sparticuz/chromium": "^149.0.0",
     "@tensorflow/tfjs": "~4.11.0",
     "@upscalerjs/esrgan-thick": "^1.0.0-beta.19",
     "browser-image-compression": "^2.0.2",
@@ -22,6 +23,7 @@
     "next": "^16.2.4",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "4.8.69",
+    "puppeteer-core": "^25.3.0",
     "qrcode": "^1.5.4",
     "react": "19.0.0",
     "react-dom": "19.0.0",

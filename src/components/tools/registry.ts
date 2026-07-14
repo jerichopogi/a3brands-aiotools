@@ -19,6 +19,8 @@ import ImageToPdf from "./ImageToPdf";
 import PdfText from "./PdfText";
 import DocxToPdf from "./DocxToPdf";
 import PdfToDocx from "./PdfToDocx";
+import PdfCompressor from "./PdfCompressor";
+import WebpageToPdf from "./WebpageToPdf";
 import QrGenerator from "./QrGenerator";
 
 export const TOOL_COMPONENTS: Record<string, ComponentType> = {
@@ -42,5 +44,7 @@ export const TOOL_COMPONENTS: Record<string, ComponentType> = {
   "pdf-text": PdfText,
   "docx-to-pdf": DocxToPdf,
   "pdf-to-docx": PdfToDocx,
+  "pdf-compressor": PdfCompressor,
+  "webpage-to-pdf": WebpageToPdf,
   "qr-generator": QrGenerator,
 };

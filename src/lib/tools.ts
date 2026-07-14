@@ -135,6 +135,20 @@ export const TOOLS: ToolDef[] = [
     badge: "new",
   },
   {
+    slug: "pdf-compressor",
+    title: "PDF Compressor",
+    tagline: "Shrink oversized PDFs under a target size. Auto-tuned, in-browser.",
+    category: "document",
+    badge: "new",
+  },
+  {
+    slug: "webpage-to-pdf",
+    title: "Webpage → PDF",
+    tagline: "Turn any public URL into a clean PDF via headless Chrome.",
+    category: "document",
+    badge: "server",
+  },
+  {
     slug: "qr-generator",
     title: "QR Generator",
     tagline: "URL or text → SVG/PNG QR. Optional logo center.",
