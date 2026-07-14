@@ -9,6 +9,8 @@ export const maxDuration = 60;
 const NAV_TIMEOUT_MS = 30_000;
 // Grace period for anti-bot interstitials that auto-clear after a JS check.
 const CHALLENGE_GRACE_MS = 5_000;
+// Short settle after scroll/fonts so late images finish decoding before capture.
+const SETTLE_MS = 600;
 const ALLOWED_FORMATS = new Set(["A4", "Letter"]);
 
 // Markers of an anti-bot interstitial (Cloudflare and similar) rather than real content.
@@ -71,6 +73,29 @@ async function validateUrl(raw: string): Promise<URL> {
     throw new Error("Could not resolve that host");
   }
   return parsed;
+}
+
+// Scrolls to the bottom (bounded) to trigger lazy-loaded images/sections, then back to top.
+async function autoScroll(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    await new Promise<void>((resolve) => {
+      const step = 400;
+      const maxSteps = 60; // ~6s cap; avoids running forever on infinite-scroll pages
+      let total = 0;
+      let steps = 0;
+      const timer = setInterval(() => {
+        window.scrollBy(0, step);
+        total += step;
+        steps += 1;
+        const atBottom = total >= document.body.scrollHeight - window.innerHeight;
+        if (atBottom || steps >= maxSteps) {
+          clearInterval(timer);
+          window.scrollTo(0, 0);
+          resolve();
+        }
+      }, 100);
+    });
+  });
 }
 
 // Detects an anti-bot challenge page by inspecting the rendered title and body text.
@@ -160,6 +185,18 @@ export async function POST(req: Request) {
         { status: 422 },
       );
     }
+
+    // Render the on-screen styles, not the (often empty) print stylesheet — this is
+    // what makes the PDF look like the actual page rather than unstyled text.
+    await page.emulateMediaType("screen");
+    // Pull in lazy content, wait for web fonts, then let late images settle.
+    await autoScroll(page);
+    try {
+      await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    } catch {
+      /* fonts API may be unavailable; not fatal */
+    }
+    await new Promise((r) => setTimeout(r, SETTLE_MS));
 
     const pdf = await page.pdf({
       format: format as "A4" | "Letter",
